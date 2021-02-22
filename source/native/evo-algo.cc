@@ -1,11 +1,12 @@
 //  This file is part of My First Evolutionary Algorithm
 //  Copyright (C) Matthew Andres Moreno, 2020.
 //  Released under MIT license; see LICENSE
+//  Modified by Soren DeHaan, 2021.
 
 #include <iostream>
 
-#include "base/vector.h"
-#include "config/command_line.h"
+#include "emp/base/vector.hpp"
+#include "emp/config/command_line.hpp"
 
 #include "../evolve.h"
 
@@ -17,5 +18,5 @@ int main(int argc, char* argv[])
 
   evolve();
 
-  std::cout << "evolved, yo!" << std::endl;
+  std::cout << "Evolution complete." << std::endl;
 }

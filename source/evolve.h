@@ -2,34 +2,39 @@
 
 #include <iostream>
 
-#include "base/vector.h"
-#include "tools/Random.h"
-#include "tools/random_utils.h"
-#include "data/DataFile.h"
+#include "emp/base/vector.hpp"
+#include "emp/math/Random.hpp"
+#include "emp/math/random_utils.hpp"
+#include "emp/data/DataFile.hpp"
 
-#include "fitness.h"
 #include "selection.h"
+#include "Organism.h"
 
 void evolve() {
   const size_t population_size = 50;
-  const size_t gens = 100;
+  const size_t gens = 6000;
   size_t curr_gen = 0;
 
   // make random engine
-  emp::Random rand(-1);
+  emp::Random rand(1);
 
   // vector to store our population,
-  // fill it with randomized genomes between 0 and 1
-  emp::vector<double> population;
-  population = emp::RandomDoubleVector(
-    rand,
-    population_size,
-    0.0,
-    1.0
-  );
+  // fill it with randomized organisms
+  emp::vector<Organism> population;
+  for(size_t i = 0; i < population_size; i++){
+    Organism org = Organism(&rand);
+    population.push_back(org);
+  }
+  // emp::vector<double> population;
+  // population = emp::RandomDoubleVector(
+  //   rand,
+  //   population_size,
+  //   0.0,
+  //   1.0
+  // );
 
   auto datafile = emp::MakeContainerDataFile(
-    std::function<emp::vector<double>()>{
+    std::function<emp::vector<Organism>()>{
       [&population](){ return population; }
     },
     "evo-algo.csv"
@@ -42,16 +47,40 @@ void evolve() {
   );
 
   datafile.AddContainerFun(
-    std::function<double(double)>{[](double x){
-      return x;
+    std::function<double(Organism)>{[](Organism x){
+      return x.getPA();
     }},
-    "genome",
+    "PA",
     "Genome's content"
   );
 
   datafile.AddContainerFun(
-    std::function<double(double)>{[](double x){
-      return calcFitness(x);
+    std::function<double(Organism)>{[](Organism x){
+      return x.getCA();
+    }},
+    "CA",
+    "Genome's content"
+  );
+
+  datafile.AddContainerFun(
+    std::function<double(Organism)>{[](Organism x){
+      return x.getPM();
+    }},
+    "PM",
+    "Genome's content"
+  );
+
+  datafile.AddContainerFun(
+    std::function<double(Organism)>{[](Organism x){
+      return x.getCM();
+    }},
+    "CM",
+    "Genome's content"
+  );
+
+  datafile.AddContainerFun(
+    std::function<double(Organism)>{[](Organism x){
+      return x.calcFitness();
     }},
     "fitness",
     "Genome's Fitness"
@@ -61,11 +90,11 @@ void evolve() {
   datafile.Update();
 
   while (++curr_gen < gens) {
-    emp::vector<double> next_population;
+    emp::vector<Organism> next_population;
 
     // select individuals for next generation
     for (size_t i = 0; i < population_size; ++i) {
-      double winner = doTournament(
+      Organism winner = doTournament(
         population,
         rand,
         3
@@ -74,10 +103,8 @@ void evolve() {
     }
 
     // do mutation
-    for (double& ind : next_population) {
-      if (rand.P(0.25)) {
-        ind += rand.GetDouble(-1.0, 1.0);
-      }
+    for (Organism& org : next_population) {
+      org.mutate();
     }
 
     population = next_population;

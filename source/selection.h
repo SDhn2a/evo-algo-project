@@ -2,14 +2,14 @@
 
 #include <algorithm>
 
-#include "base/vector.h"
-#include "tools/Random.h"
-#include "tools/random_utils.h"
+#include "emp/base/vector.hpp"
+#include "emp/math/Random.hpp"
+#include "emp/math/random_utils.hpp"
 
-#include "fitness.h"
+#include "Organism.h"
 
-double doTournament(
-  const emp::vector<double>& population,
+Organism doTournament(
+  const emp::vector<Organism>& population,
   emp::Random& rand,
   const size_t tournament_size = 7
 ) {
@@ -20,16 +20,16 @@ double doTournament(
 		tournament_size
 	);
 
-  emp::vector<double> selected;
+  emp::vector<Organism> selected;
 	for (const size_t& x: choices) {
 		selected.push_back(population[x]);
 	}
 
-	const double winner = *std::max_element(
+	Organism winner = *std::max_element(
 		std::begin(selected),
 		std::end(selected),
-		[](const double& a, const double& b) {
-			return calcFitness(a) < calcFitness(b);
+		[](Organism a, Organism b) {
+			return (a.calcFitness() < b.calcFitness());
 		}
 	);
 
