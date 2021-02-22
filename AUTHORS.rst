@@ -5,9 +5,9 @@ Credits
 Development Lead
 ----------------
 
-* Matthew Andres Moreno <m.more500@gmail.com>
+* Soren DeHaan
 
-Contributors
+Initial Code
 ------------
 
-None yet. Why not be the first?
+* Matthew Andres Moreno <m.more500@gmail.com>
