@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <string>
 
 #include "emp/base/vector.hpp"
 #include "emp/math/Random.hpp"
@@ -10,19 +11,19 @@
 #include "selection.h"
 #include "Organism.h"
 
-void evolve() {
+void evolve(int seed, double pa, double pm, double ca, double cm, std::string fPath, std::string fName) {
   const size_t population_size = 50;
   const size_t gens = 6000;
   size_t curr_gen = 0;
 
   // make random engine
-  emp::Random rand(1);
+  emp::Random rand(seed);
 
   // vector to store our population,
   // fill it with randomized organisms
   emp::vector<Organism> population;
   for(size_t i = 0; i < population_size; i++){
-    Organism org = Organism(&rand);
+    Organism org = Organism(&rand, pa, pm, ca, cm);
     population.push_back(org);
   }
   // emp::vector<double> population;
@@ -37,7 +38,7 @@ void evolve() {
     std::function<emp::vector<Organism>()>{
       [&population](){ return population; }
     },
-    "evo-algo.csv"
+    (fPath+"Org_Vals"+std::to_string(seed)+fName)
   );
 
   datafile.AddVar(
