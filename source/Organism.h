@@ -1,20 +1,22 @@
 #pragma once
 
 #include <math.h>
+#include "emp/base/vector.hpp"
 #include "emp/math/Random.hpp"
+#include "DataCenter.h"
+#define MIN 0.0001
 
 class Organism{
     private:
-        double predictAdd;
-        double predictMult;
-        double chanceAdd;
-        double chanceMult;
-        double mutateAmt = 0.002;
         emp::Ptr<emp::Random> rand;
+        emp::vector<double> weights;
+        emp::vector<double> deviations;
+        double mutateAmt = 0.5;
+        DataCenter hub;
 
     public:
-    Organism(emp::Ptr<emp::Random> random, double pA = 0.5, double pM = 1.0, double cA = 0.5, double cM = 0.5) :
-        rand(random), predictAdd(pA), predictMult(pM), chanceAdd(cA), chanceMult(cM) {;}
+    Organism(emp::Ptr<emp::Random> random, DataCenter dataCenter, emp::vector<double> w, emp::vector<double> d) :
+        rand(random), weights(w), deviations(d), hub(dataCenter) {;}
     Organism(const Organism &) = default;
     Organism(Organism &&) = default;
 
@@ -23,35 +25,22 @@ class Organism{
     bool operator==(const Organism &other) const { return (this == &other);}
     bool operator!=(const Organism &other) const {return !(*this == other);}
 
-    double getPA(){return predictAdd;}
-    double getPM(){return predictMult;}
-    double getCA(){return chanceAdd;}
-    double getCM(){return chanceMult;}
+    emp::vector<double> getWeights(){return weights;}
+    emp::vector<double> getDeviations(){return deviations;}
 
-    void setAdd(double val) {predictAdd = val;}
-    void setMult(double val) {predictMult = val;}
-    void setAddC(double val) {chanceAdd = val;}
-    void setMultC(double val) {chanceMult = val;}
+    void setWeights(emp::vector<double> val){weights = val;}
+    void setDeviations(emp::vector<double> val){deviations = val;}
 
     void mutate(){
-        predictAdd += rand->GetRandNormal(0.0,mutateAmt);
-        predictMult += rand->GetRandNormal(0.0,mutateAmt);
-        chanceAdd += rand->GetRandNormal(0.0,mutateAmt);
-        chanceMult += rand->GetRandNormal(0.0,mutateAmt);
-        if(chanceAdd > 1) chanceAdd = 1.0;
-        if(chanceAdd < 0) chanceAdd = 0.0;
-        if(chanceMult > 1) chanceMult = 1.0;
-        if(chanceMult < 0) chanceMult = 0.0;
+        for(size_t i = 0; i < weights.size(); i++){
+            weights.at(i) += rand->GetRandNormal(0.0,deviations.at(i)/10);
+            deviations.at(i) += rand->GetRandNormal(0.0,mutateAmt);
+            if(deviations.at(i) < MIN) deviations.at(i) = MIN;
+        }
+        mutateAmt = std::max(0.98*mutateAmt, 0.0002);
     }
 
-    double calcFitness(double start = 1, double end = 4){
-        double value = start;
-        if(rand->GetDouble() < chanceMult){
-            value*=predictMult;
-        }
-        if(rand->GetDouble() < chanceAdd){
-            value+=predictAdd;
-        }
-        return 1-pow((value-end),2);
-    } 
+    double calcFitness(){
+        return hub.evaluate(weights,deviations,rand);
+    }
 };

@@ -10,29 +10,24 @@
 
 #include "selection.h"
 #include "Organism.h"
+#include "DataCenter.h"
 
-void evolve(int seed, double pa, double pm, double ca, double cm, std::string fPath, std::string fName) {
-  const size_t population_size = 50;
-  const size_t gens = 6000;
+void evolve(int seed, size_t popSizeSet, size_t genSet, 
+            std::string fPath, std::string fName, std::string fileFile, DataCenter dataCenter) {
+  const size_t population_size = popSizeSet;
+  const size_t gens = genSet;
   size_t curr_gen = 0;
 
   // make random engine
   emp::Random rand(seed);
 
-  // vector to store our population,
-  // fill it with randomized organisms
   emp::vector<Organism> population;
   for(size_t i = 0; i < population_size; i++){
-    Organism org = Organism(&rand, pa, pm, ca, cm);
+    Organism org = Organism(&rand, dataCenter, 
+            emp::RandomDoubleVector(rand,dataCenter.getCounter(),-1,1), 
+            emp::RandomDoubleVector(rand,dataCenter.getCounter(),0.002,0.01));
     population.push_back(org);
   }
-  // emp::vector<double> population;
-  // population = emp::RandomDoubleVector(
-  //   rand,
-  //   population_size,
-  //   0.0,
-  //   1.0
-  // );
 
   auto datafile = emp::MakeContainerDataFile(
     std::function<emp::vector<Organism>()>{
@@ -47,37 +42,20 @@ void evolve(int seed, double pa, double pm, double ca, double cm, std::string fP
     "Current Generation"
   );
 
-  datafile.AddContainerFun(
-    std::function<double(Organism)>{[](Organism x){
-      return x.getPA();
-    }},
-    "PA",
-    "Genome's content"
-  );
-
-  datafile.AddContainerFun(
-    std::function<double(Organism)>{[](Organism x){
-      return x.getCA();
-    }},
-    "CA",
-    "Genome's content"
-  );
-
-  datafile.AddContainerFun(
-    std::function<double(Organism)>{[](Organism x){
-      return x.getPM();
-    }},
-    "PM",
-    "Genome's content"
-  );
-
-  datafile.AddContainerFun(
-    std::function<double(Organism)>{[](Organism x){
-      return x.getCM();
-    }},
-    "CM",
-    "Genome's content"
-  );
+  for(size_t i = 0; i < dataCenter.getCounter(); i++){
+    std::string wt = "weight"+std::to_string(i);
+    std::string dv = "deviation"+std::to_string(i);
+    datafile.AddContainerFun(
+      std::function<double(Organism)>{[i](Organism x){
+        return x.getWeights().at(i);
+      }}, wt, "Genome's content"
+    );
+    datafile.AddContainerFun(
+      std::function<double(Organism)>{[i](Organism x){
+        return x.getDeviations().at(i);
+      }}, dv, "Genome's content"
+    );
+  }
 
   datafile.AddContainerFun(
     std::function<double(Organism)>{[](Organism x){
@@ -98,7 +76,7 @@ void evolve(int seed, double pa, double pm, double ca, double cm, std::string fP
       Organism winner = doTournament(
         population,
         rand,
-        3
+        sqrt(population_size)
       );
       next_population.push_back(winner);
     }
@@ -109,8 +87,6 @@ void evolve(int seed, double pa, double pm, double ca, double cm, std::string fP
     }
 
     population = next_population;
-
-    datafile.Update();
-
+    if(curr_gen%100 == (genSet-1)%100){datafile.Update();}
   }
 }
