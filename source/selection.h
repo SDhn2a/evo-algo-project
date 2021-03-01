@@ -29,7 +29,7 @@ Organism doTournament(
 		std::begin(selected),
 		std::end(selected),
 		[](Organism a, Organism b) {
-			return (a.calcFitness() < b.calcFitness());
+			return (a.getFitness() < b.getFitness());
 		}
 	);
 

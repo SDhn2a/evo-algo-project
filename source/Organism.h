@@ -13,6 +13,7 @@ class Organism{
         emp::vector<double> deviations;
         double mutateAmt = 0.5;
         DataCenter hub;
+        double fitness;
 
     public:
     Organism(emp::Ptr<emp::Random> random, DataCenter dataCenter, emp::vector<double> w, emp::vector<double> d) :
@@ -41,6 +42,11 @@ class Organism{
     }
 
     double calcFitness(){
-        return hub.evaluate(weights,deviations,rand);
+        fitness = hub.evaluate(weights,deviations,rand);
+        return fitness;
+    }
+
+    double getFitness(){
+        return fitness;
     }
 };

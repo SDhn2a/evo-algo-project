@@ -86,5 +86,8 @@ int main(int argc, char* argv[])
     t.join();
   });
 
-  std::cout << "we go again!" << std::endl;
+  dataCenter.combineFiles(config.SEED(),config.SEED()+config.THREAD_CT()*config.SEED_RANGE(),
+                          config.FILE_PATH(),config.FILE_NAME());
+
+  std::cout << "k-means implemented!" << std::endl;
 }

@@ -22,7 +22,7 @@ void evolve(int seed, size_t popSizeSet, size_t genSet,
   emp::Random rand(seed);
 
   emp::vector<Organism> population;
-  for(size_t i = 0; i < population_size; i++){
+  for(size_t i = 0; i < population_size*4; i++){
     Organism org = Organism(&rand, dataCenter, 
             emp::RandomDoubleVector(rand,dataCenter.getCounter(),-1,1), 
             emp::RandomDoubleVector(rand,dataCenter.getCounter(),0.002,0.01));
@@ -66,13 +66,18 @@ void evolve(int seed, size_t popSizeSet, size_t genSet,
   );
 
   datafile.PrintHeaderKeys();
-  datafile.Update();
+  // datafile.Update();
 
   while (++curr_gen < gens) {
     emp::vector<Organism> next_population;
 
     // select individuals for next generation
-    for (size_t i = 0; i < population_size; ++i) {
+    int mult = 1;
+    if (curr_gen < sqrt(gens)) {mult += 3;} //quadruple the population size for first sqrt
+    for (size_t i = 0; i < population_size*mult; ++i) {
+      population.at(i).calcFitness();
+    }
+    for (size_t i = 0; i < population_size*mult; ++i) {
       Organism winner = doTournament(
         population,
         rand,
@@ -87,6 +92,7 @@ void evolve(int seed, size_t popSizeSet, size_t genSet,
     }
 
     population = next_population;
-    if(curr_gen%100 == (genSet-1)%100){datafile.Update();}
+    // if(curr_gen%100 == (genSet-1)%100){datafile.Update();}
   }
+  datafile.Update();
 }

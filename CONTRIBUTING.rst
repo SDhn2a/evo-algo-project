@@ -15,7 +15,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://github.com/mmore500/evo-algo/issues.
+Report bugs at https://github.com/SDhn2a/evo-algo-project/issues.
 
 If you are reporting a bug, please include:
 
@@ -29,23 +29,10 @@ Fix Bugs
 Look through the GitHub issues for bugs. Anything tagged with "bug" and "help
 wanted" is open to whoever wants to implement it.
 
-Implement Features
-~~~~~~~~~~~~~~~~~~
-
-Look through the GitHub issues for features. Anything tagged with "enhancement"
-and "help wanted" is open to whoever wants to implement it.
-
-Write Documentation
-~~~~~~~~~~~~~~~~~~~
-
-My First Evolutionary Algorithm could always use more documentation, whether as part of the
-official My First Evolutionary Algorithm docs, in docstrings, or even on the web in blog posts,
-articles, and such.
-
 Submit Feedback
 ~~~~~~~~~~~~~~~
 
-The best way to send feedback is to file an issue at https://github.com/mmore500/evo-algo/issues.
+The best way to send feedback is to file an issue at https://github.com/SDhn2a/evo-algo-project/issues.
 
 If you are proposing a feature:
 
@@ -59,15 +46,15 @@ Get Started!
 
 Ready to contribute? Here's how to set up `evo-algo` for local development.
 
-1. Fork the `evo-algo` repo on GitHub.
+1. Fork the `evo-algo-project` repo on GitHub.
 2. Clone your fork locally::
 
-    $ git clone git@github.com:your_name_here/evo-algo.git
+    $ git clone git@github.com:your_name_here/evo-algo-project.git
 
 3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
 
-    $ mkvirtualenv evo-algo
-    $ cd evo-algo/
+    $ mkvirtualenv evo-algo-project
+    $ cd evo-algo-project/
     $ python setup.py develop
 
 4. Create a branch for local development::

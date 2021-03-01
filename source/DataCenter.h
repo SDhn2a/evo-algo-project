@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
 #include <math.h>
 #include <string>
 #include <algorithm>
@@ -9,6 +10,8 @@
 #include "emp/data/DataFile.hpp"
 #include "emp/io/File.hpp"
 #include "emp/math/Random.hpp"
+#include "asa058.hpp"
+#include "asa058.cpp"
 
 struct dataPoint{
     emp::vector<int> nodeMap;
@@ -34,6 +37,103 @@ class DataCenter{
     public:
 
     size_t getCounter(){return counter;}
+
+    emp::File kMeans(std::string fileName, std::string fPath){
+        std::string kMeansName = (fPath+"k_"+fileName);
+        emp::File incoming(fPath+fileName);
+        std::cout << fileName << "\n";
+        emp::File outgoing;
+        //parse
+        incoming.ExtractCol();
+        std::vector<std::string> header = incoming.ExtractRow();
+        incoming.RemoveEmpty();
+        int observations = incoming.GetNumLines();
+        int variables = header.size();
+        std::vector<double> valuesToAvg[variables-1];
+        for(int i = 0; i < variables-1; i++){
+            std::vector<std::string> stringToValue = incoming.ExtractCol();
+            std::vector<double> valueToAdd;
+            for(size_t j = 0; j < DATASIZE; j++){
+                valueToAdd.push_back(stod(stringToValue.at((9973*j+1) % observations)));
+            }
+            valuesToAvg[i] = valueToAdd;
+        }
+        std::vector<std::string> stringValues = incoming.ExtractCol();
+        double values[DATASIZE] = {0};
+        for(size_t i = 0; i < DATASIZE; i++){
+            values[i] = stod(stringValues.at((9973*i+1) % observations));
+        }
+        double clusterCenters[CLUSTERS] = {0};
+        for(int i = 0; i < CLUSTERS; i++){
+            clusterCenters[i] = values[i];
+        }
+        double deviations[CLUSTERS] = {0};
+        int assignments[DATASIZE] = {0};
+        double workspace[DATASIZE] = {0};
+        int clusterSize[CLUSTERS] = {0};
+        clustr(values,clusterCenters,deviations,assignments,workspace,clusterSize);
+        double mean = 0;
+        outgoing.Append("Clusters:\n");
+        for(size_t i = 0; i < CLUSTERS; i++){
+            outgoing.Append(to_string(clusterCenters[i])+","+to_string(clusterSize[i])+","+to_string(deviations[i]));
+            mean += (clusterSize[i]/pow(deviations[i],2))/CLUSTERS;
+        }
+        std::cout << "\n\n";
+        for(size_t i = 0; i < DATASIZE; i++){
+            int clusterAssignment = assignments[i]-1;
+            // double meanArray[variables-1];
+            // double devArray[variables-1];
+            std::cout << clusterAssignment << "::";
+            if(clusterSize[clusterAssignment]/pow(deviations[clusterAssignment],2) >= mean){
+                std::cout << i << "  ";
+                // for(int j = 0; j < variables-1; j++){
+                //     meanArray[j] += valuesToAvg[j].at(i)/clusterSize[clusterAssignment];
+                // }
+            }
+        }
+        std::cout << "\n\n";
+        outgoing.Append("\nOptimal Values:\n");
+        for(int i = 0; i < CLUSTERS; i++){
+            if(clusterSize[i]/pow(deviations[i],2) >= mean){
+                std::string stringToAdd;
+                for(int j = 0; j < variables-1; j++){
+                    double varMean = 0;
+                    double varDev = 0;
+                    for(size_t k = 0; k < DATASIZE; k++){
+                        if(assignments[k]-1 == i){
+                            varMean += valuesToAvg[j].at(k)/clusterSize[i];
+                        }
+                    }
+                    for(size_t k = 0; k < DATASIZE; k++){
+                        if(assignments[k]-1 == i){
+                            varDev += pow(varMean-valuesToAvg[j].at(k),2)/(clusterSize[i]-1);
+                        }
+                    }
+                    varDev = pow(varDev,0.5);
+                    stringToAdd += to_string(varMean) + "  " + to_string(varDev) + "  ";
+                }
+                outgoing.Append(stringToAdd);
+            }
+        }
+        outgoing.Write(kMeansName);
+        return outgoing;
+    }
+
+    emp::File combineFiles(int startInt, int endInt, std::string fPath, std::string fName){
+        std::string combinedFileName = (fPath+"Range_"+std::to_string(startInt)+"_"+std::to_string(endInt)+fName);
+        emp::File combined;
+        for(int i = startInt; i < endInt; i++){
+            std::string fileName = (fPath+"Org_Vals"+std::to_string(i)+fName);
+            emp::File tempFile = emp::File(fileName);
+            if(i > startInt){tempFile.ExtractRow();}
+            combined.Append(tempFile);
+        }
+        combined.RemoveEmpty();
+        combined.Write(combinedFileName);
+        std::string fileToKMeans = "Range_"+std::to_string(startInt)+"_"+std::to_string(endInt)+fName;
+        kMeans(fileToKMeans,fPath);
+        return combined;
+    }
 
     double evaluate(emp::vector<double> weights, emp::vector<double> deviations, emp::Ptr<emp::Random> random){
         if(weights.size()<counter || weights.size()>counter || 
@@ -139,13 +239,13 @@ class DataCenter{
             emp::vector<unsigned int> indices(dataPile.at(i).size());
             std::iota(indices.begin(), indices.end(), 0);
             std::random_shuffle(indices.begin(), indices.end());
-            std::cout << "sqrt = " << sqrt(dataPile.at(i).size()) << "\n";
+            // std::cout << "sqrt = " << sqrt(dataPile.at(i).size()) << "\n";
             for(double j = 0; j < sqrt(dataPile.at(i).size()); j++){
                 //Add data to dataSample
-                std::cout << "index = " << indices.at(j) << "\n";
-                std::cout << "values = " << dataPile.at(i).at(indices.at(j)).values.at(0) << " "
-                                         << dataPile.at(i).at(indices.at(j)).values.at(1) << " "
-                                         << dataPile.at(i).at(indices.at(j)).values.at(2) << "\n";
+                // std::cout << "index = " << indices.at(j) << "\n";
+                // std::cout << "values = " << dataPile.at(i).at(indices.at(j)).values.at(0) << " "
+                //                          << dataPile.at(i).at(indices.at(j)).values.at(1) << " "
+                //                          << dataPile.at(i).at(indices.at(j)).values.at(2) << "\n";
                 dataSample.push_back(dataPile.at(i).at(indices.at(j)));
             }
         }
@@ -310,12 +410,12 @@ class DataCenter{
                 }
             }
         }
-        for(size_t i = 0; i < connectivity.size(); i++){
-            for(size_t j = 0; j < connectivity.size(); j++){
-                std::cout << connectivity.at(i).at(j) << " ";
-            }
-            std::cout << "\n";
-        }
+        // for(size_t i = 0; i < connectivity.size(); i++){
+        //     for(size_t j = 0; j < connectivity.size(); j++){
+        //         std::cout << connectivity.at(i).at(j) << " ";
+        //     }
+        //     std::cout << "\n";
+        // }
         return counter;
     }
 
