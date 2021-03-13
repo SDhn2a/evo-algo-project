@@ -9,15 +9,16 @@
 class Organism{
     private:
         emp::Ptr<emp::Random> rand;
+        emp::Ptr<DataCenter> hub;
+        size_t seedPos;
         emp::vector<double> weights;
         emp::vector<double> deviations;
         double mutateAmt = 0.5;
-        DataCenter hub;
         double fitness;
 
     public:
-    Organism(emp::Ptr<emp::Random> random, DataCenter dataCenter, emp::vector<double> w, emp::vector<double> d) :
-        rand(random), weights(w), deviations(d), hub(dataCenter) {;}
+    Organism(emp::Ptr<emp::Random> random, emp::Ptr<DataCenter> dataCenter, size_t sp, emp::vector<double> w, emp::vector<double> d) :
+        rand(random), hub(dataCenter), seedPos(sp), weights(w), deviations(d) {;}
     Organism(const Organism &) = default;
     Organism(Organism &&) = default;
 
@@ -42,7 +43,7 @@ class Organism{
     }
 
     double calcFitness(){
-        fitness = hub.evaluate(weights,deviations,rand);
+        fitness = hub->evaluate(weights,deviations,rand,seedPos);
         return fitness;
     }
 

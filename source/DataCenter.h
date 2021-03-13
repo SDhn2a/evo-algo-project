@@ -5,6 +5,8 @@
 #include <math.h>
 #include <string>
 #include <algorithm>
+#include <random>
+#include <array>
 
 #include "emp/base/vector.hpp"
 #include "emp/data/DataFile.hpp"
@@ -30,8 +32,14 @@ class DataCenter{
         emp::vector<std::string> titles;
         emp::vector<emp::vector<dataPoint>> dataPile;
         emp::vector<emp::vector<int>> connectivity;
+        // dataPoint dataSample[];
         emp::vector<dataPoint> dataSample;
+        // IODataPoint IODataSample[];
         emp::vector<IODataPoint> IODataSample;
+        // dataPoint fullDataSample[][];
+        emp::vector<emp::vector<dataPoint>> fullDataSample;
+        // IODataPoint fullIODataSample[][];
+        emp::vector<emp::vector<IODataPoint>> fullIODataSample;
         size_t counter;
     
     public:
@@ -76,22 +84,41 @@ class DataCenter{
         outgoing.Append("Clusters:\n");
         for(size_t i = 0; i < CLUSTERS; i++){
             outgoing.Append(to_string(clusterCenters[i])+","+to_string(clusterSize[i])+","+to_string(deviations[i]));
-            mean += (clusterSize[i]/pow(deviations[i],2))/CLUSTERS;
-        }
-        std::cout << "\n\n";
-        for(size_t i = 0; i < DATASIZE; i++){
-            int clusterAssignment = assignments[i]-1;
-            // double meanArray[variables-1];
-            // double devArray[variables-1];
-            std::cout << clusterAssignment << "::";
-            if(clusterSize[clusterAssignment]/pow(deviations[clusterAssignment],2) >= mean){
-                std::cout << i << "  ";
-                // for(int j = 0; j < variables-1; j++){
-                //     meanArray[j] += valuesToAvg[j].at(i)/clusterSize[clusterAssignment];
-                // }
+            if(clusterSize[i] > 0 && deviations[i] > 0.000001){
+                mean += (clusterSize[i]/pow(deviations[i],2))/CLUSTERS;
             }
         }
-        std::cout << "\n\n";
+        // std::cout << "\n\n";
+        // for(size_t i = 0; i < DATASIZE; i++){
+        //     int clusterAssignment = assignments[i]-1;
+        //     // double meanArray[variables-1];
+        //     // double devArray[variables-1];
+        //     std::cout << clusterAssignment << "::";
+        //     if(clusterSize[clusterAssignment]/pow(deviations[clusterAssignment],2) >= mean){
+        //         std::cout << i << "  ";
+        //         // for(int j = 0; j < variables-1; j++){
+        //         //     meanArray[j] += valuesToAvg[j].at(i)/clusterSize[clusterAssignment];
+        //         // }
+        //     }
+        // }
+        outgoing.Append("\nValue Labels:\n");
+        // Printing the connection labels
+        emp::vector<std::string> connectionTitles;
+        for(size_t i = 0; i < connectivity.size(); i++){
+            for(size_t j = 0; j < connectivity.size(); j++){
+                if(connectivity.at(i).at(j) == 1){
+                    // weightMatrix.at(i).at(j) = weights.at(matrixIter);
+                    // devMatrix.at(i).at(j) = deviations.at(matrixIter);
+                    // matrixIter++;
+                    connectionTitles.push_back(titles.at(i)+" to "+titles.at(j));
+                }
+            }
+        }
+        std::string singleStringCT = connectionTitles.at(0);
+        for(size_t i = 1; i < connectionTitles.size(); i++){
+            singleStringCT += "  ||  "+connectionTitles.at(i);
+        }
+        outgoing.Append(singleStringCT);
         outgoing.Append("\nOptimal Values:\n");
         for(int i = 0; i < CLUSTERS; i++){
             if(clusterSize[i]/pow(deviations[i],2) >= mean){
@@ -110,7 +137,7 @@ class DataCenter{
                         }
                     }
                     varDev = pow(varDev,0.5);
-                    stringToAdd += to_string(varMean) + "  " + to_string(varDev) + "  ";
+                    stringToAdd += "M" + to_string(varMean) + " D" + to_string(varDev) + "   ";
                 }
                 outgoing.Append(stringToAdd);
             }
@@ -135,7 +162,8 @@ class DataCenter{
         return combined;
     }
 
-    double evaluate(emp::vector<double> weights, emp::vector<double> deviations, emp::Ptr<emp::Random> random){
+    double evaluate(emp::vector<double> weights, emp::vector<double> deviations, emp::Ptr<emp::Random> random, size_t seedPos){
+        // std::cout << "evaluating\n";
         if(weights.size()<counter || weights.size()>counter || 
            deviations.size()<counter || deviations.size()>counter){return -1;}
         emp::vector<emp::vector<double>> weightMatrix;
@@ -158,9 +186,11 @@ class DataCenter{
             }
         }
         double distance = 0;
-        for(size_t i = 0; i < IODataSample.size(); i++){
+        // for(size_t i = 0; i < 1; i++){
+        for(size_t i = 0; i < sqrt(IODataSample.size()); i++){
             //actually evaluating
-            IODataPoint dt = IODataSample.at(i);
+            IODataPoint dt = IODataSample.at(((int) pow((i/2)+2,3)+9973*seedPos) % IODataSample.size());
+            // IODataPoint dt = IODataSample[i];
             emp::vector<double> nodeValues(connectivity.size()); //one value for every node
             emp::vector<bool> nodeValuesInput(connectivity.size()); //true if nodeValues has been filled in the corresponding spot
             //put input into input nodes
@@ -234,24 +264,31 @@ class DataCenter{
     }
 
     void sampleData(){
+        std::cout << "data pile size = " << dataPile.size() << "\n";
         for(size_t i = 0; i < dataPile.size(); i++){
             //Create a random permutation
-            emp::vector<unsigned int> indices(dataPile.at(i).size());
-            std::iota(indices.begin(), indices.end(), 0);
-            std::random_shuffle(indices.begin(), indices.end());
-            // std::cout << "sqrt = " << sqrt(dataPile.at(i).size()) << "\n";
-            for(double j = 0; j < sqrt(dataPile.at(i).size()); j++){
+            // emp::vector<unsigned int> indices(dataPile.at(i).size());
+            // std::iota(indices.begin(), indices.end(), 0);
+            // std::random_shuffle(indices.begin(), indices.end());
+            // for(double j = 0; j < sqrt(dataPile.at(i).size()); j++){
+            for(double j = 0; j < dataPile.at(i).size(); j++){
                 //Add data to dataSample
                 // std::cout << "index = " << indices.at(j) << "\n";
                 // std::cout << "values = " << dataPile.at(i).at(indices.at(j)).values.at(0) << " "
                 //                          << dataPile.at(i).at(indices.at(j)).values.at(1) << " "
                 //                          << dataPile.at(i).at(indices.at(j)).values.at(2) << "\n";
-                dataSample.push_back(dataPile.at(i).at(indices.at(j)));
+                // dataSample.push_back(dataPile.at(i).at(indices.at(j)));
+                // dataSample[j] = (dataPile.at(i).at(indices.at(j)));
+                dataSample.push_back(dataPile.at(i).at(j));
             }
         }
+        fullDataSample.push_back(dataSample);
+        // fullDataSample[0] = (dataSample);
+        std::cout << "data sampled\n";
     }
 
     void dataToIOData(int pick){
+        std::cout << "data sample size = " << dataSample.size() << "\n";
         //For each data point
         for(size_t i = 0; i < dataSample.size(); i++){
             //Determine used and unused columns
@@ -259,6 +296,8 @@ class DataCenter{
             emp::vector<int> openCol;
             for(size_t j = 0; j < dataSample.at(i).nodeMap.size(); j++){
                 columns.push_back(dataSample.at(i).nodeMap.at(j));
+            // for(size_t j = 0; j < dataSample[i].nodeMap.size(); j++){
+            //     columns.push_back(dataSample[i].nodeMap.at(j));
             }
             for(size_t j = 0; j < connectivity.size(); j++){
                 bool used = false;
@@ -334,9 +373,20 @@ class DataCenter{
             emp::vector<double> fullValues(connectivity.size());
             for(size_t j = 0; j < dataSample.at(i).values.size(); j++){
                 fullValues.at(dataSample.at(i).nodeMap.at(j)) = dataSample.at(i).values.at(j);
+            // for(size_t j = 0; j < dataSample[i].values.size(); j++){
+            //     fullValues.at(dataSample[i].nodeMap.at(j)) = dataSample[i].values.at(j);
             }
             newDataPoint.values = fullValues;
             IODataSample.push_back(newDataPoint);
+            // std::cout << "io size: " << IODataSample.size() << "\n";
+            // if(fullIODataSample.size() == 0){
+            //     std::vector<IODataPoint> base;
+            //     fullIODataSample.push_back(base);
+            // }
+            // fullIODataSample.at(0).push_back(newDataPoint);
+            // std::cout << "io size: " << fullIODataSample.at(0).size() << "\n";
+            // IODataSample[i] = newDataPoint;
+            // fullIODataSample[0][i] = newDataPoint;
         }
     }
 
@@ -410,12 +460,12 @@ class DataCenter{
                 }
             }
         }
-        // for(size_t i = 0; i < connectivity.size(); i++){
-        //     for(size_t j = 0; j < connectivity.size(); j++){
-        //         std::cout << connectivity.at(i).at(j) << " ";
-        //     }
-        //     std::cout << "\n";
-        // }
+        for(size_t i = 0; i < connectivity.size(); i++){
+            for(size_t j = 0; j < connectivity.size(); j++){
+                std::cout << connectivity.at(i).at(j) << " ";
+            }
+            std::cout << "\n";
+        }
         return counter;
     }
 

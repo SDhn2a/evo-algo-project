@@ -12,7 +12,7 @@
 #include "Organism.h"
 #include "DataCenter.h"
 
-void evolve(int seed, size_t popSizeSet, size_t genSet, 
+void evolve(int seed, size_t seedPos, size_t popSizeSet, size_t genSet, 
             std::string fPath, std::string fName, std::string fileFile, DataCenter dataCenter) {
   const size_t population_size = popSizeSet;
   const size_t gens = genSet;
@@ -23,7 +23,7 @@ void evolve(int seed, size_t popSizeSet, size_t genSet,
 
   emp::vector<Organism> population;
   for(size_t i = 0; i < population_size*4; i++){
-    Organism org = Organism(&rand, dataCenter, 
+    Organism org = Organism(&rand, &dataCenter, seedPos, 
             emp::RandomDoubleVector(rand,dataCenter.getCounter(),-1,1), 
             emp::RandomDoubleVector(rand,dataCenter.getCounter(),0.002,0.01));
     population.push_back(org);
@@ -59,7 +59,7 @@ void evolve(int seed, size_t popSizeSet, size_t genSet,
 
   datafile.AddContainerFun(
     std::function<double(Organism)>{[](Organism x){
-      return x.calcFitness();
+      return x.getFitness();
     }},
     "fitness",
     "Genome's Fitness"
@@ -77,6 +77,7 @@ void evolve(int seed, size_t popSizeSet, size_t genSet,
     for (size_t i = 0; i < population_size*mult; ++i) {
       population.at(i).calcFitness();
     }
+    next_population.reserve(population_size*mult);
     for (size_t i = 0; i < population_size*mult; ++i) {
       Organism winner = doTournament(
         population,
@@ -85,7 +86,7 @@ void evolve(int seed, size_t popSizeSet, size_t genSet,
       );
       next_population.push_back(winner);
     }
-
+    
     // do mutation
     for (Organism& org : next_population) {
       org.mutate();

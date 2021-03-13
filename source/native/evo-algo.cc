@@ -8,6 +8,7 @@
 #include <thread>
 #include <vector>
 #include <pthread.h>
+#include <bits/stdc++.h>
 
 #include "emp/base/vector.hpp"
 #include "emp/config/command_line.hpp"
@@ -30,6 +31,7 @@ EMP_BUILD_CONFIG(MyConfigType,
 )
   
 struct threadFeed{
+  int baseSeed;
   int seedStart;
   int seedEnd;
   size_t popSize;
@@ -54,9 +56,11 @@ int main(int argc, char* argv[])
   if (args.TestUnknown() == false) exit(0);
 
   DataCenter dataCenter;
+  // dataCenter.reserveSpace(config.SEED_RANGE()*config.THREAD_CT(), config.WIDE_TEST());
   dataCenter.importData(config.FILE_FILE());
   dataCenter.standardizeDataByFile();
   dataCenter.sampleData();
+  // dataCenter.sampleData(config.SEED(), config.SEED()+config.THREAD_CT()*config.SEED_RANGE());
   dataCenter.makeConnectivity(config.FILE_CNCT());
   for(size_t i = 9973; i < 9973+config.WIDE_TEST(); i++){
     dataCenter.dataToIOData(i);
@@ -65,7 +69,8 @@ int main(int argc, char* argv[])
   std::vector<std::thread> threadList;
   for (size_t i = 0; i < config.THREAD_CT(); i++) {
     threadFeed tf;
-    tf.seedStart = config.SEED()+i*config.SEED_RANGE();
+    tf.baseSeed = config.SEED();
+    tf.seedStart = tf.baseSeed+i*config.SEED_RANGE();
     tf.seedEnd = tf.seedStart+config.SEED_RANGE();
     tf.popSize = config.POP_SIZE();
     tf.gens = config.GENS();
@@ -76,7 +81,7 @@ int main(int argc, char* argv[])
     threadList.push_back(std::thread([tf]() 
     {
       for(int i = tf.seedStart; i < tf.seedEnd; i++){
-        evolve(i,tf.popSize,tf.gens,tf.filePath,tf.fileName,tf.fileFile,tf.dc);
+        evolve(i,i-tf.baseSeed,tf.popSize,tf.gens,tf.filePath,tf.fileName,tf.fileFile,tf.dc);
         std::cout << "yay! ";
       }
     }));
@@ -89,5 +94,5 @@ int main(int argc, char* argv[])
   dataCenter.combineFiles(config.SEED(),config.SEED()+config.THREAD_CT()*config.SEED_RANGE(),
                           config.FILE_PATH(),config.FILE_NAME());
 
-  std::cout << "k-means implemented!" << std::endl;
+  std::cout << "done?" << std::endl;
 }
