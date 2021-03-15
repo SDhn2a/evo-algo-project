@@ -264,7 +264,6 @@ class DataCenter{
     }
 
     void sampleData(){
-        std::cout << "data pile size = " << dataPile.size() << "\n";
         for(size_t i = 0; i < dataPile.size(); i++){
             //Create a random permutation
             // emp::vector<unsigned int> indices(dataPile.at(i).size());
@@ -284,11 +283,11 @@ class DataCenter{
         }
         fullDataSample.push_back(dataSample);
         // fullDataSample[0] = (dataSample);
-        std::cout << "data sampled\n";
+        // std::cout << "data sampled\n";
     }
 
     void dataToIOData(int pick){
-        std::cout << "data sample size = " << dataSample.size() << "\n";
+        // std::cout << "data sample size = " << dataSample.size() << "\n";
         //For each data point
         for(size_t i = 0; i < dataSample.size(); i++){
             //Determine used and unused columns

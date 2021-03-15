@@ -39,11 +39,12 @@ struct threadFeed{
   std::string filePath;
   std::string fileName;
   std::string fileFile;
-  DataCenter dc;
+  emp::Ptr<DataCenter> dc;
 };
 
 int main(int argc, char* argv[])
 {
+  clock_t startTime = clock();
   MyConfigType config;
   bool success = config.Read("MySettings.cfg");
   if(!success) config.Write("MySettings.cfg");
@@ -77,12 +78,12 @@ int main(int argc, char* argv[])
     tf.filePath = config.FILE_PATH();
     tf.fileName = config.FILE_NAME();
     tf.fileFile = config.FILE_FILE();
-    tf.dc = dataCenter;
+    tf.dc = &dataCenter;
     threadList.push_back(std::thread([tf]() 
     {
       for(int i = tf.seedStart; i < tf.seedEnd; i++){
         evolve(i,i-tf.baseSeed,tf.popSize,tf.gens,tf.filePath,tf.fileName,tf.fileFile,tf.dc);
-        std::cout << "yay! ";
+        // std::cout << "yay! ";
       }
     }));
   }
@@ -93,6 +94,6 @@ int main(int argc, char* argv[])
 
   dataCenter.combineFiles(config.SEED(),config.SEED()+config.THREAD_CT()*config.SEED_RANGE(),
                           config.FILE_PATH(),config.FILE_NAME());
-
-  std::cout << "done?" << std::endl;
+  std::cout << (clock()-startTime)/100000 << "\n";
+  std::cout << "done!" << std::endl;
 }

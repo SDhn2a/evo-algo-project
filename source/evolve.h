@@ -13,7 +13,7 @@
 #include "DataCenter.h"
 
 void evolve(int seed, size_t seedPos, size_t popSizeSet, size_t genSet, 
-            std::string fPath, std::string fName, std::string fileFile, DataCenter dataCenter) {
+            std::string fPath, std::string fName, std::string fileFile, emp::Ptr<DataCenter> dataCenter) {
   const size_t population_size = popSizeSet;
   const size_t gens = genSet;
   size_t curr_gen = 0;
@@ -23,9 +23,9 @@ void evolve(int seed, size_t seedPos, size_t popSizeSet, size_t genSet,
 
   emp::vector<Organism> population;
   for(size_t i = 0; i < population_size*4; i++){
-    Organism org = Organism(&rand, &dataCenter, seedPos, 
-            emp::RandomDoubleVector(rand,dataCenter.getCounter(),-1,1), 
-            emp::RandomDoubleVector(rand,dataCenter.getCounter(),0.002,0.01));
+    Organism org = Organism(&rand, dataCenter, seedPos, 
+            emp::RandomDoubleVector(rand,dataCenter->getCounter(),-1,1), 
+            emp::RandomDoubleVector(rand,dataCenter->getCounter(),0.002,0.01));
     population.push_back(org);
   }
 
@@ -42,7 +42,7 @@ void evolve(int seed, size_t seedPos, size_t popSizeSet, size_t genSet,
     "Current Generation"
   );
 
-  for(size_t i = 0; i < dataCenter.getCounter(); i++){
+  for(size_t i = 0; i < dataCenter->getCounter(); i++){
     std::string wt = "weight"+std::to_string(i);
     std::string dv = "deviation"+std::to_string(i);
     datafile.AddContainerFun(
